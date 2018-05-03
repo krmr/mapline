@@ -171,7 +171,7 @@ class Mapbox {
 
       map.on('render', function listener() {
         if (map.loaded()) {
-          let data = map.getCanvas().toDataURL('image/jpeg', 0.9);
+          let data = map.getCanvas().toDataURL('image/jpeg', 0.95);
           resolve({format, orientation, data, margin, width, height, details});
           map.off('render', listener);
         }
@@ -198,6 +198,8 @@ function toPixels(length) {
 
 function toStyleURI(style) {
   switch(style) {
+  case "topo":
+    return 'mapbox://styles/ohr/cjgp14jla00132rl2qr4o76r0?optimize=true';
   case "outdoors":
   case "streets":
     return 'mapbox://styles/mapbox/' + style + '-v10?optimize=true';

@@ -14,7 +14,7 @@ const validator = new FormValidator();
   try {
     map = new Mapbox({
       container: "map",
-      style: toStyleURI("outdoors"),
+      style: toStyleURI("topo"),
       center: [13.463, 47.386],
       zoom: 11
     });
@@ -330,8 +330,8 @@ function setPaperformatOptions() {
   });
 
   // if available, set a5 as default. otherwise, use last entry
-  paperform.value = validFormats.indexOf("a5") >= 0
-    ? "a5"
+  paperform.value = validFormats.indexOf("a4") >= 0
+    ? "a4"
     : validFormats[validFormats.length - 1];
 }
 
@@ -339,6 +339,8 @@ function setPaperformatOptions() {
 
 function toStyleURI(style) {
   switch(style) {
+  case "topo":
+    return 'mapbox://styles/ohr/cjgp14jla00132rl2qr4o76r0?optimize=true';
   case "outdoors":
   case "streets":
     return 'mapbox://styles/mapbox/' + style + '-v10?optimize=true';

@@ -48,7 +48,7 @@ class Track {
   }
 
   get before() {
-    return "housenum-label";
+    return "country-label-lg";
   }
 
   get layer() {}
@@ -66,7 +66,7 @@ class Route extends Track {
         "line-cap": "square"
       },
       "paint": {
-        "line-color": "#ff69b4",
+        "line-color": "#ff0000",
         "line-width": 3,
         "line-opacity": 0.6,
       },
@@ -157,7 +157,7 @@ class Poi extends Track {
       "source": this._id,
       "type": "symbol",
       "layout": {
-        "icon-image": "campsite-11",  // TODO: create map of poi icons
+        "icon-image": "campsite-15",  // TODO: create map of poi icons
         "icon-ignore-placement": true,
       }
     };
