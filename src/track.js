@@ -5,6 +5,7 @@ import layers from "./layers.js";
 class Track {
   constructor(id, geojson) {
     this._id = id;
+    this._source = id;
     this._geojson = geojson || {};
   }
 
@@ -41,7 +42,7 @@ class Track {
   }
 
   clearLayerData(map) {
-    map.getSource(this._id).setData({
+    map.getSource(this._source).setData({
       type: "FeatureCollection",
       features: []
     });
@@ -58,7 +59,7 @@ class Route extends Track {
   get layer() {
     return {
       id: this._id,
-      source: this._id,
+      source: this._source,
       type: "line",
       layout: {
         "line-join": "round",
@@ -92,7 +93,7 @@ class Cutouts extends Track {
   get layer() {
     return {
       id: this._id,
-      source: this._id,
+      source: this._source,
       type: "line",
       paint: {
         "line-color": "#444444",
@@ -111,7 +112,7 @@ class Milemarkers extends Track {
   get layer() {
     return {
       id: this._id,
-      source: this._id,
+      source: this._source,
       type: "symbol",
       layout: {
         "icon-image": "marker-11",
@@ -149,7 +150,7 @@ class POIs extends Track {
   get layer() {
     return {
       id: this._id,
-      source: this._id,
+      source: this._source,
       type: "symbol",
       layout: {
         "icon-image": "{symbol}",

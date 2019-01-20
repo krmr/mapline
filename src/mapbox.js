@@ -82,8 +82,9 @@ class Mapbox {
 	feature.properties.alternative = ("cmt" in feature.properties && feature.properties.cmt.toUpperCase().includes("ALTERNATIVE"))
         // [this._details.climb, this._details.descent] = trackutils.elevation(geojson);
     }
-    this.addTrack(new Route("route", trackutils.tracks(geojson)));
-    this.addTrack(new Alternative("alternative", "route", geojson));
+    let tracks = trackutils.tracks(geojson);
+    this.addTrack(new Route("route", tracks));
+    this.addTrack(new Alternative("alternative", "route", tracks));
     this.updateTrack(this._tracks.get("route"));
 
     this.addTrack(new POIs("waypoints", trackutils.waypoints(geojson)));
