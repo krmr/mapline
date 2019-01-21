@@ -5,7 +5,6 @@ import layers from "./layers.js";
 class Track {
   constructor(id, geojson) {
     this._id = id;
-    this._source = id;
     this._geojson = geojson || {};
   }
 
@@ -42,7 +41,7 @@ class Track {
   }
 
   clearLayerData(map) {
-    map.getSource(this._source).setData({
+    map.getSource(this._id).setData({
       type: "FeatureCollection",
       features: []
     });
@@ -59,7 +58,7 @@ class Route extends Track {
   get layer() {
     return {
       id: this._id,
-      source: this._source,
+      source: this._id,
       type: "line",
       layout: {
         "line-join": "round",
@@ -69,22 +68,19 @@ class Route extends Track {
         "line-color": "#ff0000",
         "line-width": 3,
         "line-opacity": 0.6,
-      },
-      "filter": ["!=", "alternative", true]
+      }
     };
   }
 }
 
 class Alternative extends Route {
-  constructor(id, source, geojson) {
+  constructor(id, geojson) {
     super(id,geojson);
-    this._source = source;
   }
 
   get layer() {
     let layer = super.layer;
     layer.paint["line-dasharray"] = [3, 2];
-    layer.filter = ["==", "alternative", true];
     return layer;  
   }
 }
@@ -93,7 +89,7 @@ class Cutouts extends Track {
   get layer() {
     return {
       id: this._id,
-      source: this._source,
+      source: this._id,
       type: "line",
       paint: {
         "line-color": "#444444",
@@ -112,7 +108,7 @@ class Milemarkers extends Track {
   get layer() {
     return {
       id: this._id,
-      source: this._source,
+      source: this._id,
       type: "symbol",
       layout: {
         "icon-image": "marker-11",
@@ -126,22 +122,19 @@ class Milemarkers extends Track {
       },
       "paint": {
 	"text-color": "#000000",
-      },
-      "filter": ["!=", "alternative", true]
+      }
     };
   }
 }
 
 class AlternativeMilemarkers extends Milemarkers {
-  constructor(id, source, geojson) {
+  constructor(id, geojson) {
     super(id,geojson);
-    this._source = source;
   }
 
   get layer() {
     let layer = super.layer;
     layer.paint["text-color"] = "#404040";
-    layer.filter = ["==", "alternative", true];
     return layer;  
   }
 }
@@ -150,7 +143,7 @@ class POIs extends Track {
   get layer() {
     return {
       id: this._id,
-      source: this._source,
+      source: this._id,
       type: "symbol",
       layout: {
         "icon-image": "{symbol}",

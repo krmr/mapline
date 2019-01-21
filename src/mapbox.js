@@ -78,14 +78,12 @@ class Mapbox {
     this._details.filename = filename.substring(0, filename.lastIndexOf("."));
     const geojson = trackutils.togeojson(ext, data);
 
-    for (const feature of geojson.features) {
-	feature.properties.alternative = ("cmt" in feature.properties && feature.properties.cmt.toUpperCase().includes("ALTERNATIVE"))
-        // [this._details.climb, this._details.descent] = trackutils.elevation(geojson);
-    }
-    let tracks = trackutils.tracks(geojson);
-    this.addTrack(new Route("route", tracks));
-    this.addTrack(new Alternative("alternative", "route", tracks));
+    let routeTracks = trackutils.tracks(geojson);
+    this.addTrack(new Route("route", routeTracks));
     this.updateTrack(this._tracks.get("route"));
+    
+    this.addTrack(new Alternative("alternative", trackutils.alternative(geojson)));
+    this.updateTrack(this._tracks.get("alternative"));
 
     this.addTrack(new POIs("waypoints", trackutils.waypoints(geojson)));
 
@@ -94,8 +92,8 @@ class Mapbox {
       this._details.descent,
       this._details.min_ele,
       this._details.max_ele
-    ] = trackutils.elevation(geojson);
-    this._details.distance = trackutils.totalDistance(geojson);
+    ] = trackutils.elevation(routeTracks);
+    this._details.distance = trackutils.totalDistance(routeTracks);
   }
 
   loadPOIs(category, visibility) {
@@ -181,10 +179,15 @@ class Mapbox {
   }
 
   updateCutouts(options) {
+    let geojson = { 
+      "type" : "FeatureCollection",
+      "features": [ ... this._tracks.get("route").geojson.features, ... this._tracks.get("alternative").geojson.features ]
+    }
+    geojson.features.sort(function(f1, f2){return f1.properties.index - f2.properties.index;});
     this.addTrack(
       new Cutouts(
         "cutouts",
-        mapcutter(this._tracks.get("route").geojson, options)
+        mapcutter(geojson, options)
       )
     );
     this.updateTrack(this._tracks.get("cutouts"));
@@ -198,8 +201,15 @@ class Mapbox {
         trackutils.milemarkers(this._tracks.get("route").geojson, interval)
       )
     );
-    this.addTrack(new AlternativeMilemarkers("alternativemilemarkers", "milemarkers", trackutils.milemarkers(this._tracks.get("route").geojson, interval)));
     this.updateTrack(this._tracks.get("milemarkers"));
+    
+    this.addTrack(
+      new AlternativeMilemarkers(
+	"alternativemilemarkers",
+	trackutils.milemarkers(this._tracks.get("alternative").geojson, interval)
+      )
+    );
+    this.updateTrack(this._tracks.get("alternativemilemarkers"));
   }
 
   updateBounds(options) {

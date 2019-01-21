@@ -69,6 +69,14 @@ function intersect(coord1, coord2, bounds) {
 function prepare(geojson) {
   geojson = normalize(geojson);
   // geojson = complexify(geojson, 1);
+  geojson = index(geojson);
+  return geojson;
+}
+
+function index(geojson) {
+  for (let i = 0; i < geojson.features.length; i++) {
+    geojson.features[i].properties.index = i;
+  }
   return geojson;
 }
 
@@ -105,8 +113,6 @@ function complexify(track, interval) {
   return normalize(createFeature("LineString", [].concat(...result)));
 }
 
-
-
 // return track reduced to FeatureCollection of "type" features
 function reduce(track, type) {
   track = normalize(track);
@@ -124,6 +130,14 @@ function reduce(track, type) {
   return featureCollection(reducedFeatures);
 }
 
+function isAlternativeTrack(feature) {
+  return ("cmt" in feature.properties && feature.properties.cmt.toUpperCase().includes("ALTERNATIVE"))
+}
+
+function isRegularTrack(feature) {
+  return !isAlternativeTrack(feature);
+}
+
 const trackutils = {
   // return bounds of track
   bounds(track) {
@@ -136,9 +150,6 @@ const trackutils = {
   totalDistance(track) {
     let totalDistance = 0;
     for (const feature of track.features) {
-      if(feature.properties.alternative) {
-	continue;
-      }
       const line = feature.geometry.coordinates;
       const ruler = cheapruler(line[Math.trunc(line.length/2)][1]);
       totalDistance += parseFloat(ruler.lineDistance(line));
@@ -179,9 +190,6 @@ const trackutils = {
     let intermediateDistance = 0;
     let previousDistance = 0;
     for (const feature of track.features) {
-      if(feature.properties.alternative) {
-	continue;
-      }
       const line = feature.geometry.coordinates;
       const ruler = cheapruler(bounds.bbox.getCenter().lat);
       let lastInBounds = insideBounds(line[0], bounds.bbox);
@@ -302,7 +310,16 @@ const trackutils = {
 
   // return featureCollection of linestrings
   tracks(track) {
-    return reduce(track, "LineString");
+    let allTracks = reduce(track, "LineString");
+    let tracks = allTracks.features.filter(isRegularTrack);
+    return featureCollection(tracks);
+  },
+
+  // return featureCollection of linestrings
+  alternative(track) {
+    let allTracks = reduce(track, "LineString");
+    let tracks = allTracks.features.filter(isAlternativeTrack);
+    return featureCollection(tracks);
   },
 
   // return featureCollection of waypoints
