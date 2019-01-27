@@ -2,6 +2,7 @@ import mapboxgl from "mapbox-gl";
 import cheapruler from "cheap-ruler";
 import normalize from "@mapbox/geojson-normalize";
 import toGeoJSON from "@mapbox/togeojson";
+import profile from "./profile.js";
 
 // copied from https://github.com/mapbox/cheap-ruler
 function interpolate(a, b, t) {
@@ -151,7 +152,7 @@ const trackutils = {
     let totalDistance = 0;
     for (const feature of track.features) {
       const line = feature.geometry.coordinates;
-      const ruler = cheapruler(line[Math.trunc(line.length/2)][1]);
+      const ruler = cheapruler(line[Math.trunc(line.length / 2)][1]);
       totalDistance += parseFloat(ruler.lineDistance(line));
     }
     return totalDistance;
@@ -166,19 +167,19 @@ const trackutils = {
     for (const feature of track.features) {
       const line = feature.geometry.coordinates;
       if (line[0].length < 3) {   // no elevation data
-	return [NaN, NaN, NaN, NaN];
+        return [NaN, NaN, NaN, NaN];
       }
       let last = line[0][2];
       line.forEach(coord => {
-	min_ele = Math.min(min_ele, coord[2]);
-	max_ele = Math.max(max_ele, coord[2]);
-	let diff = coord[2] - last;
-	if (diff > 0) {
+        min_ele = Math.min(min_ele, coord[2]);
+        max_ele = Math.max(max_ele, coord[2]);
+        let diff = coord[2] - last;
+        if (diff > 0) {
           ascent += diff;
-	} else {
+        } else {
           descent -= diff;
-	}
-	last = coord[2];
+        }
+        last = coord[2];
       });
     }
     return [ascent, descent, min_ele, max_ele];
@@ -198,10 +199,10 @@ const trackutils = {
         let thisInBounds = insideBounds(line[i], bounds.bbox);
         if (thisInBounds) {
           if (lastInBounds) {
-            insideDistance += ruler.distance(line[i-1], line[i]);
+            insideDistance += ruler.distance(line[i - 1], line[i]);
           } else {
             // last point was outside bounds, add distance to intersection
-            const intersection = intersect(line[i-1], line[i], bounds.geometry.coordinates[0]);
+            const intersection = intersect(line[i - 1], line[i], bounds.geometry.coordinates[0]);
             const intersectionDistance = ruler.distance(line[i], intersection);
             insideDistance += intersectionDistance;
           }
@@ -209,19 +210,19 @@ const trackutils = {
           // outside bounds
           if (lastInBounds) {
             // last point was inside these bounds, find intersection
-            const intersection = intersect(line[i-1], line[i], bounds.geometry.coordinates[0]);
-            const intersectionDistance = ruler.distance(line[i-1], intersection);
+            const intersection = intersect(line[i - 1], line[i], bounds.geometry.coordinates[0]);
+            const intersectionDistance = ruler.distance(line[i - 1], intersection);
             insideDistance += intersectionDistance;
-            
+
             intermediateDistance = previousDistance + ruler.lineDistance(line.slice(0, i)) + intersectionDistance;
           }
         }
         lastInBounds = thisInBounds;
       }
 
-      if(intermediateDistance == 0 || lastInBounds) {
+      if (intermediateDistance == 0 || lastInBounds) {
         intermediateDistance = previousDistance + ruler.lineDistance(line);
-      } 
+      }
       previousDistance += ruler.lineDistance(line);
     }
 
@@ -237,7 +238,7 @@ const trackutils = {
     if (interval <= 0) {
       return featureCollection([]);
     }
-    
+
     const points = [];
     let count = 0;
     let intermediateDistance = 0;
@@ -257,7 +258,7 @@ const trackutils = {
 	mainNextPoint = nextPoint;
       }
       const line = feature.geometry.coordinates;
-      const ruler = cheapruler(line[Math.trunc(line.length/2)][1]);
+      const ruler = cheapruler(line[Math.trunc(line.length / 2)][1]);
       for (let i = 0; i < line.length - 1; i++) {
         let currentPoint = line[i];
         nextPoint = line[i + 1];
@@ -309,6 +310,12 @@ const trackutils = {
   },
 
   // return featureCollection of linestrings
+  allTracks(track) {
+    let allTracks = reduce(track, "LineString");
+    return featureCollection(allTracks.features);
+  },
+
+  // return featureCollection of linestrings
   tracks(track) {
     let allTracks = reduce(track, "LineString");
     let tracks = allTracks.features.filter(isRegularTrack);
@@ -347,7 +354,32 @@ const trackutils = {
 
   emptyFeatureCollection() {
     return featureCollection([]);
-  }
+  },
+
+  slopes(track) {
+    let result = featureCollection([]);
+    for (const feature of track.features) {
+      let line = feature.geometry.coordinates;
+
+      // find the section with significant slope
+      let slopeSegments = profile.slopes(line);
+
+      // create features
+      for (const part of slopeSegments) {
+        let newFeature = createFeature("LineString", line.slice(part.start, part.end));
+        newFeature.properties.slopesign = Math.sign(part.slope);
+        newFeature.properties.slope = Math.abs(part.slope);
+        if (newFeature.properties.slope >= 10) {
+          newFeature.properties.symbol = "gradient-steep";
+        } else {
+          newFeature.properties.symbol = "gradient";
+        }
+        result.features.push(newFeature);
+      }
+    }
+
+    return result;
+  },
 };
 
 export default trackutils;

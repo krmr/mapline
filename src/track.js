@@ -160,4 +160,22 @@ class POIs extends Track {
   }
 }
 
-export { Route, Alternative, Cutouts, Milemarkers, AlternativeMilemarkers, POIs };
+class Slopes extends Track {
+  get layer() {
+    return {
+      id: this._id,
+      source: this._id,
+      type: "symbol",
+      layout: {
+        "symbol-placement": "line-center",
+        "symbol-spacing": 125,
+        "icon-ignore-placement": true,
+        "icon-allow-overlap": true,
+        "icon-image": "{symbol}",
+        "icon-rotate": ['*', 90, ['get', 'slopesign']],
+      }
+    };
+  }
+}
+
+export { Route, Alternative, Cutouts, Milemarkers, AlternativeMilemarkers, POIs, Slopes };

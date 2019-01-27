@@ -8,7 +8,7 @@ import overpass from "./overpass.js";
 import paperformat from "./paperformat.js";
 import token from "./mapboxtoken.js";
 import trackutils from "./trackutils.js";
-import { Route, Alternative, Cutouts, Milemarkers, AlternativeMilemarkers, POIs } from "./track.js";
+import { Route, Alternative, Cutouts, Milemarkers, AlternativeMilemarkers, POIs, Slopes } from "./track.js";
 
 class Mapbox {
   constructor(options, tracks, details) {
@@ -27,7 +27,9 @@ class Mapbox {
       throw Error(i18n.translate("msg_mapbox_error"));
     }
     this._map.on("styledata", () => this._updateAllTracks());
+
     this._addControls();
+    this._addImages();
   }
 
   _addControls() {
@@ -43,6 +45,18 @@ class Mapbox {
       this.addTrack(track);
       this.updateTrack(track);
     });
+  }
+
+  _addImages() {
+    this._map.loadImage("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAABMSURBVCiRY2AYBcjAmoGB4S6UJlnjEwYGhkwoTbQBVgwMDI8ZGBgsoHxjKN+BVI0wQNAAXBoJGkBII14DTjAwMJgT0AgD5lD1IxIAACxZEKW+Qmt1AAAAAElFTkSuQmCC",
+      (error, image) => this._addImage(error, image, "gradient"));
+    this._map.loadImage(" data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAABwSURBVCiRY2AYdkCHgYFhEZQmCegxMDC8ZmBg+A+l9cjRCMPvGBgYjMnRSJQBegwMDK/QNGxD47/C5gVsNlZD5YoJueAJmoJyNMPL0eQfI0uux6MRmwHrkCXYGRgYehkYGFJxaISBVAYGhh6o+qEKAIa2M4HllhG5AAAAAElFTkSuQmCC",
+      (error, image) => this._addImage(error, image, "gradient-steep"));
+  }
+
+  _addImage(error, image, name) {
+    if (error) throw error;
+    this._map.addImage(name, image);
   }
 
   addTrack(track) {
@@ -75,13 +89,14 @@ class Mapbox {
       .split(".")
       .pop()
       .toLowerCase();
+
     this._details.filename = filename.substring(0, filename.lastIndexOf("."));
     const geojson = trackutils.togeojson(ext, data);
 
     let routeTracks = trackutils.tracks(geojson);
     this.addTrack(new Route("route", routeTracks));
     this.updateTrack(this._tracks.get("route"));
-    
+
     this.addTrack(new Alternative("alternative", trackutils.alternative(geojson)));
     this.updateTrack(this._tracks.get("alternative"));
 
@@ -94,6 +109,10 @@ class Mapbox {
       this._details.max_ele
     ] = trackutils.elevation(routeTracks);
     this._details.distance = trackutils.totalDistance(routeTracks);
+
+    let slopes = trackutils.slopes(trackutils.allTracks(geojson));
+    this.addTrack(new Slopes("slopes", slopes));
+    this.updateTrack(this._tracks.get("slopes"));
   }
 
   loadPOIs(category, visibility) {
@@ -133,16 +152,16 @@ class Mapbox {
     details.set(
       "track_ascent_descent",
       "Δ" +
-        this.roundWithUnit(this._details.ascent, 0, "m") +
-        ",  ∇" +
-        this.roundWithUnit(this._details.descent, 0, "m")
+      this.roundWithUnit(this._details.ascent, 0, "m") +
+      ",  ∇" +
+      this.roundWithUnit(this._details.descent, 0, "m")
     );
     details.set(
       "track_min_max_elevation",
       "&DownArrowBar;" +
-        this.roundWithUnit(this._details.min_ele, 0, "m") +
-        ", &UpArrowBar;" +
-        this.roundWithUnit(this._details.max_ele, 0, "m")
+      this.roundWithUnit(this._details.min_ele, 0, "m") +
+      ", &UpArrowBar;" +
+      this.roundWithUnit(this._details.max_ele, 0, "m")
     );
     details.set("map_sheets", this._details.mapCount);
     return details;
@@ -155,7 +174,7 @@ class Mapbox {
     let totalMapCount = details.get("map_sheets");
     let formatDetail = this.roundWithUnit;
 
-    return function(mapCount) {
+    return function (mapCount) {
       let [localLength, intermediateLength] = trackutils.distanceInBounds(
         cutouts[mapCount - 1],
         route
@@ -179,11 +198,11 @@ class Mapbox {
   }
 
   updateCutouts(options) {
-    let geojson = { 
-      "type" : "FeatureCollection",
-      "features": [ ... this._tracks.get("route").geojson.features, ... this._tracks.get("alternative").geojson.features ]
+    let geojson = {
+      "type": "FeatureCollection",
+      "features": [... this._tracks.get("route").geojson.features, ... this._tracks.get("alternative").geojson.features]
     }
-    geojson.features.sort(function(f1, f2){return f1.properties.index - f2.properties.index;});
+    geojson.features.sort(function (f1, f2) { return f1.properties.index - f2.properties.index; });
     this.addTrack(
       new Cutouts(
         "cutouts",
@@ -202,11 +221,11 @@ class Mapbox {
       )
     );
     this.updateTrack(this._tracks.get("milemarkers"));
-    
+
     this.addTrack(
       new AlternativeMilemarkers(
-	"alternativemilemarkers",
-	trackutils.milemarkers(this._tracks.get("alternative").geojson, interval)
+        "alternativemilemarkers",
+        trackutils.milemarkers(this._tracks.get("alternative").geojson, interval)
       )
     );
     this.updateTrack(this._tracks.get("alternativemilemarkers"));
@@ -271,7 +290,7 @@ class Mapbox {
     let details = this.getPrintDetails();
 
     const map = this._map;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       resizeContainer(map.getContainer(), width, height);
       map.resize();
       map.setCenter(feature.bbox.getCenter());
@@ -293,7 +312,7 @@ class Mapbox {
         }
       });
 
-      map.on("error", function(e) {
+      map.on("error", function (e) {
         map.getContainer().parentNode.removeChild(map.getContainer());
         reject(Error(e.message));
       });
