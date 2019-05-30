@@ -108,6 +108,7 @@ class Mapbox {
     this.updateTrack(this._tracks.get("alternative"));
 
     this.addTrack(new POIs("waypoints", trackutils.waypoints(geojson)));
+    this.updateTrack(this._tracks.get("waypoints"));
 
     [
       this._details.ascent,
