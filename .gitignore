@@ -6,3 +6,5 @@ demo/
 src/mapboxtoken.js
 TODO.md
 .parcel-cache
+/yarn.lock
+/.vscode/launch.json
