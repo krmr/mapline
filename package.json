@@ -1,35 +1,45 @@
 {
   "name": "mapline",
-  "version": "0.22.1",
+  "version": "0.25.0",
   "description": "Create maps along a track in print quality.",
-  "main": "src/index.js",
   "keywords": [],
   "homepage": "https://github.com/krmr/mapline",
   "author": "sgelb",
   "license": "GPL-3.0-or-later",
   "scripts": {
     "serve": "parcel serve index.html",
-    "build": "parcel build --no-cache --no-source-maps index.html --detailed-report"
+    "dist": "parcel build --no-content-hash --no-cache --no-source-maps --target dist index.html",
+    "prebuild": "parcel build --no-content-hash --no-cache --no-source-maps --target prebuild index.html"
   },
-  "browserslist": [
-    "defaults",
-    "not Explorer < 999",
-    "not Android < 999"
-  ],
+  "alias": {
+    "bootstrap-modal": "/node_modules/bootstrap/js/dist/modal.js",
+    "bootstrap-collapse": "/node_modules/bootstrap/js/dist/collapse.js"
+  },
+  "dist": "dist/index.html",
+  "prebuild": "prebuild/index.html",
+  "targets": {
+    "dist": {
+      "distDir": "dist",
+      "publicUrl": "./"
+    },
+    "prebuild": {
+      "distDir": "prebuild",
+      "publicUrl": "./"
+    }
+  },
   "dependencies": {
-    "@derhuerst/query-overpass": "^1.0.1",
+    "@derhuerst/query-overpass": "^2.0.0",
     "@mapbox/geojson-normalize": "^0.0.1",
     "@mapbox/mapbox-gl-language": "^0.10.0",
     "@mapbox/togeojson": "^0.16.0",
-    "cheap-ruler": "^2.5.1",
-    "jspdf": "^1.5.3",
-    "mapbox-gl": "^0.54.0"
+    "@popperjs/core": "^2.5.4",
+    "bootstrap": "^5.3.3",
+    "cheap-ruler": "^3.0.1",
+    "jspdf": "^2.3.0",
+    "mapbox-gl": "1.13.0"
   },
   "devDependencies": {
-    "autoprefixer": "^9.6.0",
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0",
-    "cssnano": "^4.1.10",
-    "parcel-bundler": "^1.12.3"
+    "parcel": "^2.12.0",
+    "process": "^0.11.10"
   }
 }

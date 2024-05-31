@@ -1,4 +1,4 @@
-import cheapruler from "cheap-ruler";
+import CheapRuler from "cheap-ruler";
 
 // Helper function to solve the linear system
 function Quincunx(u, v, w, q) {
@@ -188,7 +188,7 @@ function isRelevant(profile) {
 
 // get the elevation profile for a track line
 function elevationProfile(line) {
-    const ruler = cheapruler(line[Math.trunc(line.length / 2)][1], "meters");
+    const ruler = new CheapRuler(line[Math.trunc(line.length / 2)][1], "meters");
 
     // start with computing the distances along the track
     let profile = [];
