@@ -25,7 +25,7 @@ class Mapbox {
     this._language =
       language ||
       new MapBoxLanguage({
-        defaultLanguage: i18n.currentLanguage()
+        defaultLanguage: i18n.currentLanguage(),
       });
 
     try {
@@ -46,7 +46,7 @@ class Mapbox {
   }
 
   _updateAllTracks() {
-    this._tracks.forEach(track => {
+    this._tracks.forEach((track) => {
       this.addTrack(track);
       this.updateTrack(track);
     });
@@ -77,10 +77,7 @@ class Mapbox {
   }
 
   loadRoute(data, filename) {
-    let ext = filename
-      .split(".")
-      .pop()
-      .toLowerCase();
+    let ext = filename.split(".").pop().toLowerCase();
     this._details.filename = filename.substring(0, filename.lastIndexOf("."));
     const geojson = trackutils.togeojson(ext, data);
 
@@ -108,12 +105,12 @@ class Mapbox {
     if (visibility) {
       overpass
         .loadPOIs(this.cutouts.features, category)
-        .then(result => {
+        .then((result) => {
           console.log("Found " + result.length + " results for " + category);
           this.addTrack(new POIs(category, trackutils.pois(result)));
           this.updateTrack(this._tracks.get(category));
         })
-        .catch(e => {
+        .catch((e) => {
           console.error(
             "Error fetching POIs for " + category + ": " + e.message
           );
@@ -159,7 +156,7 @@ class Mapbox {
     let totalMapCount = details.get("map_sheets");
     let formatDetail = this.roundWithUnit;
 
-    return function(mapCount) {
+    return function (mapCount) {
       let [localLength, intermediateLength] = trackutils.distanceInBounds(
         cutouts[mapCount - 1],
         route
@@ -231,14 +228,14 @@ class Mapbox {
   set style(style) {
     this._map.removeControl(this._language);
     this._language = new MapBoxLanguage({
-      defaultLanguage: i18n.currentLanguage()
+      defaultLanguage: i18n.currentLanguage(),
     });
     this._map.addControl(this._language);
     this._map.setStyle(style);
   }
 
   clearTracks() {
-    this._tracks.forEach(track => track.clearLayerData(this._map));
+    this._tracks.forEach((track) => track.clearLayerData(this._map));
   }
 
   copyTo(container) {
@@ -249,7 +246,7 @@ class Mapbox {
         interactive: false,
         renderWorldCopies: false,
         preserveDrawingBuffer: true,
-        fadeDuration: 0
+        fadeDuration: 0,
       },
       this._tracks,
       this._details,
@@ -268,7 +265,7 @@ class Mapbox {
     let details = this.getPrintDetails();
 
     const map = this._map;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       resizeContainer(map.getContainer(), width, height);
       map.resize();
       map.setCenter(feature.bbox.getCenter());
@@ -284,13 +281,13 @@ class Mapbox {
             margin,
             width,
             height,
-            details
+            details,
           });
           map.off("render", listener);
         }
       });
 
-      map.on("error", function(e) {
+      map.on("error", function (e) {
         map.getContainer().parentNode.removeChild(map.getContainer());
         reject(Error(e.message));
       });
